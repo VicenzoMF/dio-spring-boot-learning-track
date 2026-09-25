@@ -144,4 +144,8 @@ curl -X POST http://localhost:8080/transactions/ai \
 
 ### O que aprendi
 
-_(escreva aqui, com suas palavras, o que você aprendeu com o desafio)_
+- Como o **Tool Calling** liga o modelo a casos de uso reais: o mesmo `@Tool` serve a API REST e o assistente por voz, sem duplicar regra de negócio.
+- Que **validação de regra de negócio pertence ao domínio** (aqui, ao construtor de `Transaction`) e não ao controller, e que um `@RestControllerAdvice` transforma esse erro em HTTP 400.
+- Que erros de validação lançados dentro de uma ferramenta voltam ao modelo, então o prompt também precisa orientar como explicá-los à pessoa usuária.
+- Como testar casos de uso com um **repositório em memória**, sem banco de dados e sem chave da OpenAI, deixando o fluxo de voz para testes de integração.
+- Limitação: o fluxo de áudio (transcrição e síntese de voz) exige chave da OpenAI e não foi executado nos testes desta entrega.
