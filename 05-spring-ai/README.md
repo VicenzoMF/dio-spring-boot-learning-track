@@ -83,3 +83,65 @@ Run the application and tests:
 
 - Educational final project focused on AI plus architectural discipline.
 - External provider integration tests may require active credentials.
+
+---
+
+## Minha evolução: validação de transações e total por categoria
+
+### O que foi implementado
+
+1. **Validação no domínio.** Uma nova `Transaction` só é criada com descrição preenchida, valor maior que zero e categoria informada. Caso contrário, lança `InvalidTransactionException`. A descrição é salva sem espaços nas pontas. Transações lidas do banco não passam por essa validação, pois já foram validadas na criação.
+2. **Erro HTTP 400 em vez de 500.** O `ApiExceptionHandler` converte a exceção de domínio em uma resposta `400 Bad Request` (formato `ProblemDetail`).
+3. **Nova consulta financeira.** O `SumTransactionsByCategoryUseCase` retorna o total gasto e a quantidade de transações de uma categoria. Ele serve o REST (`GET /transactions/{category}/total`) e o modelo de IA via `@Tool` (`sum-transactions-by-category`), como em "quanto gastei no mercado?".
+4. **Prompt atualizado** (`prompts/system-message.st`) para orientar o modelo a usar a nova ferramenta e a explicar erros de validação.
+5. **Testes unitários** que não precisam de banco nem de chave da OpenAI (usam um repositório em memória).
+
+### Tecnologias
+
+Java, Spring Boot, Spring AI (ChatClient, Tool Calling, transcrição e síntese de voz), Spring Data JPA, MySQL, JUnit 5 e AssertJ.
+
+### Como executar
+
+Requisitos: JDK 25, Docker (o `compose.yml` sobe o MySQL) e uma chave da OpenAI.
+
+```bash
+export OPENAI_API_KEY=sua-chave
+./gradlew bootRun
+```
+
+### Como testar
+
+Testes unitários das novas regras (sem chave e sem banco):
+
+```bash
+./gradlew test --tests "dio.budgeting.PersistTransactionUseCaseTest" \
+               --tests "dio.budgeting.SumTransactionsByCategoryUseCaseTest"
+```
+
+Fluxo principal por REST:
+
+```bash
+# cria uma transação (valor em centavos)
+curl -X POST http://localhost:8080/transactions \
+  -H "Content-Type: application/json" \
+  -d '{"description":"Mercado","category":"GROCERIES","amount":5000}'
+
+# valor inválido -> 400
+curl -i -X POST http://localhost:8080/transactions \
+  -H "Content-Type: application/json" \
+  -d '{"description":"Mercado","category":"GROCERIES","amount":0}'
+
+# total por categoria
+curl http://localhost:8080/transactions/GROCERIES/total
+```
+
+Fluxo de voz (requer chave da OpenAI):
+
+```bash
+curl -X POST http://localhost:8080/transactions/ai \
+  -F "file=@src/test/resources/audio/recording-1.m4a" --output resposta.mp3
+```
+
+### O que aprendi
+
+_(escreva aqui, com suas palavras, o que você aprendeu com o desafio)_
